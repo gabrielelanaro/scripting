@@ -1,5 +1,5 @@
 import unittest
-from scripting.commands import cp,rm,touch,mkdir,basename
+from scripting.commands import cp,rm,touch,mkdir,basename,archive
 import os
 
 def make_dir_structure():
@@ -97,6 +97,17 @@ class TestBasename(unittest.TestCase):
         name = "/hello/baby"
         self.assertEqual(basename(name),"baby")
         
+class TestTar(unittest.TestCase):
+    def setUp(self):
+        make_dir_structure()
+        
+    def test_archive(self):
+        archive("testdir","testdir.tar")
+        self.assert_(os.path.exists("testdir.tar"))
+    def tearDown(self):
+        rm("testdir",recursive=True)
+        rm("testdir.tar")
+
 
 if __name__ == '__main__':
     unittest.main()

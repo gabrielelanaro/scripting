@@ -11,6 +11,7 @@ sh
 call
 """
 import os,shutil,unittest
+import shlex,subprocess,itertools,tarfile
 
 def basename(src):
     "Unix basename"
@@ -57,4 +58,21 @@ def touch(src,times=None):
     with file(src, 'a'):
         os.utime(src,times)
 
+def sh_args(args):
+    p = subprocess.Popen(args)
+    p.wait()
+    return p.returncode
 
+def sh_cmdln(cmdl, args):
+    p = subprocess.Popen(itertools.chain(shlex.split(cmdl), args))
+    p.wait()
+    return p.returncode
+
+def archive(src, dst, format="tar"):
+    open_method = {"tar":"w",
+                   "gzip":"w:gz",
+                   "bz2":"w:bz2"}
+    
+    arch = tarfile.open(dst,open_method[format])
+    arch.add(dst)
+    arch.close()
