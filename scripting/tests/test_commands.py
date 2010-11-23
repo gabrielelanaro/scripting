@@ -1,5 +1,5 @@
 import unittest
-from scripting.commands import cp,rm,touch,mkdir,basename,archive
+from scripting.commands import cp,rm,touch,mkdir,basename,archive,find
 import os
 
 def make_dir_structure():
@@ -80,6 +80,15 @@ class TestRm(unittest.TestCase):
         self.assert_(os.path.exists("test.txt"))
         rm("test.txt")
 
+    def test_error(self):
+        mkdir("testdir")
+        with self.assertRaises(Exception):
+            rm("testdir")
+
+    def tearDown(self):
+        if os.path.exists("testdir"):
+            rm("testdir",recursive=True)
+        
     def test_dir_nested(self, ):
         """
         """
@@ -108,6 +117,17 @@ class TestTar(unittest.TestCase):
         rm("testdir",recursive=True)
         rm("testdir.tar")
 
+class TestFind(unittest.TestCase):
+    def setUp(self, ):
+        make_dir_structure()
+
+    def test_find(self, ):
+        files = list(find("*.txt"))
+        self.assertEqual(files,["stuff.txt","stuff2.txt"])
+
+    def tearDown(self):
+        rm("testdir",recursive=True)
 
 if __name__ == '__main__':
     unittest.main()
+
