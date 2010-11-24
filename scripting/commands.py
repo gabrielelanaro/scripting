@@ -8,15 +8,24 @@ from functools import wraps
 import collections
 
 def take_str_or_list(f):
+    '''
+    Allow the function decorated to take as the first argument a
+    string or an iterable.
+    
+    If the first arg is a string, call *f* with the string as the
+    first argument, if the first argument is an iterable, call f on
+    each item of the iterable and return a list of the results.
+    '''
     @wraps(f)
     def wrapper(*args,**kw):
         first = args[0]
         if isinstance(first, str):
             return f(*args,**kw)
         elif isinstance(first, collections.Iterable):
-            return [f(arg,**kw) for arg in args]
+            return [f(arg,**kw) for arg in first]
         else:
             raise Exception("First argument should be a string or a list")
+    return wrapper
 
 def basename(src):
     "Unix basename"
@@ -90,6 +99,10 @@ def rm(src):
 
 @take_str_or_list
 def touch(src,times=None):
+    '''
+    Create *src* file if it doesn't exists or update his modification
+    time according to *times*.
+    '''
     with file(src, 'a'):
         os.utime(src,times)
 

@@ -1,6 +1,8 @@
-import unittest
-from scripting.commands import cp,rm,touch,mkdir,basename,archive,find
 import os
+import unittest
+
+from scripting.commands import cp,rm,touch,mkdir,basename,archive,find
+from scripting.commands import take_str_or_list
 
 def make_dir_structure():
     mkdir("testdir")
@@ -30,16 +32,16 @@ class TestCp(unittest.TestCase):
         """
         touch("test.txt")
 
-    def _rm(self, src, recursive=False):
+    def _rm(self, src):
         if os.path.exists(src):
-            rm(src,recursive)
+            rm(src)
     
     def tearDown(self, ):
         """
         """
         self._rm("test.txt")
-        self._rm("/tmp/testdir",recursive=True)
-        self._rm("testdir",recursive=True)
+        self._rm("/tmp/testdir")
+        self._rm("testdir")
 
     def test_file_file(self):
         cp("test.txt","/tmp/test.txt")
@@ -58,7 +60,7 @@ class TestCp(unittest.TestCase):
         Create a directory structure and copy it
         """
         make_dir_structure()
-        cp("testdir", "/tmp", recursive=True)
+        cp("testdir","/tmp")
         assert_dir_structure()
 
     def test_dir_dir_nonexistent(self):
@@ -71,7 +73,7 @@ class TestRm(unittest.TestCase):
         """Testing the directory removal
         """
         mkdir("testdir")
-        rm("testdir",recursive=True)
+        rm("testdir")
         self.assertFalse(os.path.exists("testdir"))
 
     def test_file(self):
@@ -79,21 +81,22 @@ class TestRm(unittest.TestCase):
         touch("test.txt")
         self.assert_(os.path.exists("test.txt"))
         rm("test.txt")
-
-    def test_error(self):
-        mkdir("testdir")
-        with self.assertRaises(Exception):
-            rm("testdir")
+        
+    
+    # def test_error(self):
+    #     mkdir("testdir")
+    #     with self.assertRaises(Exception):
+    #         rm("testdir")
 
     def tearDown(self):
         if os.path.exists("testdir"):
-            rm("testdir",recursive=True)
+            rm("testdir")
         
     def test_dir_nested(self, ):
         """
         """
         make_dir_structure()
-        rm("testdir",recursive=True)
+        rm("testdir")
         self.assertFalse(os.path.exists("testdir"))
 
 class TestBasename(unittest.TestCase):
@@ -113,8 +116,9 @@ class TestTar(unittest.TestCase):
     def test_archive(self):
         archive("testdir","testdir.tar")
         self.assert_(os.path.exists("testdir.tar"))
+    
     def tearDown(self):
-        rm("testdir",recursive=True)
+        rm("testdir")
         rm("testdir.tar")
 
 class TestFind(unittest.TestCase):
@@ -123,11 +127,19 @@ class TestFind(unittest.TestCase):
 
     def test_find(self, ):
         files = list(find("*.txt"))
-        self.assertEqual(files,["stuff.txt","stuff2.txt"])
+        self.assertEqual(files,['./testdir/stuff.txt', './testdir/testdir2/stuff2.txt'])
 
     def tearDown(self):
-        rm("testdir",recursive=True)
+        rm("testdir")
+
+class TestTakeList(unittest.TestCase):
+    def test_list(self, ):
+        @take_str_or_list
+        def function(arg):
+            return 1
+        self.assertEqual(function("Hello"), 1)
+        self.assertEqual(function([1,2,3]),[1,1,1])
+
 
 if __name__ == '__main__':
     unittest.main()
-
