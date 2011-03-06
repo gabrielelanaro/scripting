@@ -6,6 +6,7 @@ import os, shutil
 import shlex,subprocess,itertools,tarfile
 from functools import wraps
 import collections
+import zipfile
 
 def take_str_or_list(f):
     '''
@@ -103,7 +104,7 @@ def touch(src,times=None):
     Create *src* file if it doesn't exists or update his modification
     time according to *times*.
     '''
-    with file(src, 'a'):
+    with open(src, 'a'):
         os.utime(src,times)
 
 def sh_args(args):
@@ -118,17 +119,31 @@ def sh_cmdln(cmdl, args):
 
 def archive(src, dst, format="tar"):
     '''
-    Create an archive
-
-    :param src: The directory to be archived
-    :param dst: The archive destination name
-    :param format: can be tar gzip or bzip
+    Create an archive *dst* from the directory *src*. The format can
+    be specified with the *format* parameter that can be:
+    
+    - tar
+    - gzip
+    - bz2
+    - zip
     '''
+    
+    if format == "zip":
+        arch = zipfile.ZipFile(dst,"w")
+        print("zipping")
+        for root,dirs,files in os.walk(src):
+            for f in files:
+                towrite = os.path.join(root, f)
+                towritename = os.path.relpath(towrite,
+                                               os.path.join(src,".."))
+                arch.write(towrite, towritename)
+        arch.close()
+        return
     
     open_method = {"tar":"w",
                    "gzip":"w:gz",
                    "bz2":"w:bz2"}
     
     arch = tarfile.open(dst,open_method[format])
-    arch.add(src)
+    arch.add(src,arcname=basename(src))
     arch.close()

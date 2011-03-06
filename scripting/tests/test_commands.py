@@ -1,8 +1,56 @@
 import os
 import unittest
+from attest import Tests, Assert
 
-from scripting.commands import cp,rm,touch,mkdir,basename,archive,find
+from scripting.commands import cp, rm, touch, mkdir, basename, archive, find
 from scripting.commands import take_str_or_list
+
+cptest = Tests()
+
+
+@cptest.context
+def make_test_file():
+    """Make and return the test file, finally it removes it.
+
+    """
+    try:
+        touch("stuff.txt")
+        yield "stuff.txt"
+    finally:
+        rm_silent("stuff.txt")
+
+
+def rm_silent(src):
+    """Remove if the file exists.
+
+    """
+    if os.path.exists(src):
+            rm(src)
+
+
+@cptest.test
+def cp_f_f(src):
+    """Copy a file to another file.
+
+    """
+    try:
+        cp(src, "/tmp/test.txt")
+        Assert(os.path.exists("/tmp/test.txt"))
+    finally:
+        rm_silent("/tmp/test.txt")
+
+
+@cptest.test
+def cp_f_d(src):
+    """Copy a file to a directory.
+
+    """
+    try:
+        cp(src, "/tmp")
+        Assert(os.path.exists(os.path.join("/tmp", basename(src))))
+    finally:
+        rm_silent("/tmp/test.txt")
+
 
 def make_dir_structure():
     mkdir("testdir")
@@ -10,7 +58,8 @@ def make_dir_structure():
     mkdir("testdir/testdir2")
     touch("testdir/testdir2/stuff2.txt")
 
-def assertfile(src,descriptor):
+
+def assertfile(src, descriptor):
     ret = True
     if "d" in descriptor:
         ret = ret and os.path.isdir(src)
@@ -20,40 +69,15 @@ def assertfile(src,descriptor):
         ret = ret and os.path.isfile(src)
     assert ret
 
+
 def assert_dir_structure():
-    assertfile("/tmp/testdir","d")
-    assertfile("/tmp/testdir/stuff.txt","f")
-    assertfile("/tmp/testdir/testdir2","d")
-    assertfile("/tmp/testdir/testdir2/stuff2.txt","f")
+    assertfile("/tmp/testdir", "d")
+    assertfile("/tmp/testdir/stuff.txt", "f")
+    assertfile("/tmp/testdir/testdir2", "d")
+    assertfile("/tmp/testdir/testdir2/stuff2.txt", "f")
+
 
 class TestCp(unittest.TestCase):
-    def setUp(self, ):
-        """
-        """
-        touch("test.txt")
-
-    def _rm(self, src):
-        if os.path.exists(src):
-            rm(src)
-    
-    def tearDown(self, ):
-        """
-        """
-        self._rm("test.txt")
-        self._rm("/tmp/testdir")
-        self._rm("testdir")
-
-    def test_file_file(self):
-        cp("test.txt","/tmp/test.txt")
-        self.assert_(os.path.exists("/tmp/test.txt"))
-        rm("/tmp/test.txt")
-
-    def test_file_dir(self, ):
-        """
-        """
-        cp("test.txt","/tmp/")
-        self.assert_(os.path.exists("/tmp/test.txt"))
-        rm("/tmp/test.txt")
 
     def test_dir_dir(self, ):
         """
@@ -142,4 +166,4 @@ class TestTakeList(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    cptest.run()
