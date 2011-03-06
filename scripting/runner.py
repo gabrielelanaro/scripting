@@ -6,7 +6,8 @@ def command(f):
     commandline.
 
     """
-    cmdparser = parser.add_subparsers('command', help=f.__doc__)
+    sub = parser.add_subparsers()
+    cmdparser = sub.add_parser(f.__name__, help=f.__doc__)
     cmdparser.set_defaults(func=f)
 
 def main():
