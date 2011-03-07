@@ -16,11 +16,12 @@ def fooarg(pos1):
 def test_dec():
     with capture_output() as (out, err):
         args = parser.parse_args(['foo'])
-        args.func()
+        args.func(args)
     assert out == ['foo called']
     
     with capture_output() as (out, err):
         args = parser.parse_args(['fooarg', 'pos1'])
+        args.func(args)
     assert out == ['pos1']
 
 if __name__ == '__main__':
