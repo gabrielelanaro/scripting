@@ -23,7 +23,7 @@ def take_str_or_list(f):
         if isinstance(first, str):
             return f(*args,**kw)
         elif isinstance(first, collections.Iterable):
-            return [f(arg,**kw) for arg in first]
+            return [f(arg, *args[1:], **kw) for arg in first]
         else:
             raise Exception("First argument should be a string or a list")
     return wrapper
