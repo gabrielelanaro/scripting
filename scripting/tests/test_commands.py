@@ -2,10 +2,13 @@ import os
 import unittest
 from attest import Tests, Assert
 
-from scripting.commands import cp, rm, touch, mkdir, basename, archive, find
+from scripting.commands import (cp, rm, touch, mkdir,
+                                basename, archive, find,
+                                unpack)
 from scripting.commands import take_str_or_list
 
 cptest = Tests()
+cpdirtest = Tests()
 
 
 @cptest.context
@@ -19,6 +22,13 @@ def make_test_file():
     finally:
         rm_silent("stuff.txt")
 
+@cpdirtest.context
+def make_test_dir():
+    try:
+        make_dir_structure()
+        yield
+    finally:
+        rm_silent('testdir')
 
 def rm_silent(src):
     """Remove if the file exists.
@@ -51,6 +61,21 @@ def cp_f_d(src):
     finally:
         rm_silent("/tmp/test.txt")
 
+@cpdirtest.test
+def cp_d_d():
+    try:
+        cp('testdir', '/tmp')
+        assert_dir_structure()
+    finally:
+        rm_silent('/tmp/testdir')
+
+@cpdirtest.test
+def cp_d_d_nonexistent():
+    try:
+        cp("testdir","/tmp/testdir")
+        assert_dir_structure()
+    finally:
+        rm_silent('/tmp/testdir')
 
 def make_dir_structure():
     mkdir("testdir")
@@ -76,21 +101,20 @@ def assert_dir_structure():
     assertfile("/tmp/testdir/testdir2", "d")
     assertfile("/tmp/testdir/testdir2/stuff2.txt", "f")
 
+DATADIR = 'scripting/tests/data'
+import filecmp
+archive = Tests()
 
-class TestCp(unittest.TestCase):
-
-    def test_dir_dir(self, ):
-        """
-        Create a directory structure and copy it
-        """
-        make_dir_structure()
-        cp("testdir","/tmp")
-        assert_dir_structure()
-
-    def test_dir_dir_nonexistent(self):
-        make_dir_structure()
-        cp("testdir","/tmp/testdir")
-        assert_dir_structure()
+@archive.test
+def test_unpack():
+    try:
+        unpack(os.path.join(DATADIR, 'testarc.tar.gz'), '/tmp')
+        comp = filecmp.dircmp('/tmp/testarc', os.path.join(DATADIR, 'testarc'))
+        comp.report_full_closure()
+        assert False
+        
+    finally:
+        rm_silent("/tmp/testarc")
 
 class TestRm(unittest.TestCase):
     def test_dir(self):
@@ -166,4 +190,5 @@ class TestTakeList(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    cptest.run()
+    suite = Tests((cptest, cpdirtest, archive))
+    suite.run()
