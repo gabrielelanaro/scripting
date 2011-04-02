@@ -130,7 +130,6 @@ def archive(src, dst, format="tar"):
     
     if format == "zip":
         arch = zipfile.ZipFile(dst,"w")
-        print("zipping")
         for root,dirs,files in os.walk(src):
             for f in files:
                 towrite = os.path.join(root, f)
@@ -146,4 +145,28 @@ def archive(src, dst, format="tar"):
     
     arch = tarfile.open(dst,open_method[format])
     arch.add(src,arcname=basename(src))
+    arch.close()
+
+def unpack(src, dst, format=None):
+    """Unpack the archive *src* in the destination directory
+    *dst*. The format can be *tar*, *gzip*, *bz2*, *zip* or *None* to
+    auto-select the format based on the extension.
+
+    """
+    if not format:
+        base, ext = os.path.splitext(src)
+    else:
+        ext = format
+
+    ext2open_method = {".zip": "zip",
+                       ".gz": "r:gz",
+                       ".bz2": "r:bz2",
+                       ".tar": "r:"}
+
+    if ext2open_method[ext] == "zip":
+        arch = zipfile.ZipFile(src,"r")
+    else:
+        arch = tarfile.open(src, ext2open_method[ext])
+
+    arch.extractall(dst)
     arch.close()

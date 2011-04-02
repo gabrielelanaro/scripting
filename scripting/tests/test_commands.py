@@ -102,19 +102,25 @@ def assert_dir_structure():
     assertfile("/tmp/testdir/testdir2/stuff2.txt", "f")
 
 DATADIR = 'scripting/tests/data'
-import filecmp
 archive = Tests()
 
-@archive.test
-def test_unpack():
+@archive.context
+def arch_context():
     try:
-        unpack(os.path.join(DATADIR, 'testarc.tar.gz'), '/tmp')
-        comp = filecmp.dircmp('/tmp/testarc', os.path.join(DATADIR, 'testarc'))
-        comp.report_full_closure()
-        assert False
-        
+        yield
     finally:
         rm_silent("/tmp/testarc")
+
+@archive.test
+def test_unpack_tgz():
+    unpack(os.path.join(DATADIR, 'testarc.tar.gz'), '/tmp')
+    assertfile("/tmp/testarc/file1.txt", "f") # Maybe the other are present, anyway
+
+@archive.test
+def test_unpack_zip():
+    unpack(os.path.join(DATADIR, 'testarc.zip'), "/tmp")
+    assertfile("/tmp/testarc/file1.txt", "f") # Maybe the other are present, anyway
+
 
 class TestRm(unittest.TestCase):
     def test_dir(self):
