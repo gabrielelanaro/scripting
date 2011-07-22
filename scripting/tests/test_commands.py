@@ -10,7 +10,6 @@ from scripting.commands import take_str_or_list
 cptest = Tests()
 cpdirtest = Tests()
 
-
 @cptest.context
 def make_test_file():
     """Make and return the test file, finally it removes it.
@@ -136,11 +135,6 @@ class TestRm(unittest.TestCase):
         self.assert_(os.path.exists("test.txt"))
         rm("test.txt")
         
-    
-    # def test_error(self):
-    #     mkdir("testdir")
-    #     with self.assertRaises(Exception):
-    #         rm("testdir")
 
     def tearDown(self):
         if os.path.exists("testdir"):
@@ -186,15 +180,18 @@ class TestFind(unittest.TestCase):
     def tearDown(self):
         rm("testdir")
 
-class TestTakeList(unittest.TestCase):
-    def test_list(self, ):
-        @take_str_or_list
-        def function(arg):
-            return 1
-        self.assertEqual(function("Hello"), 1)
-        self.assertEqual(function([1,2,3]),[1,1,1])
 
+utils = Tests()
+
+@utils.test
+def take_list_text():
+    @take_str_or_list
+    def function(arg):
+        return 1
+    Assert(function("Hello")) == 1
+    Assert(function([1,2,3])) == [1,1,1]
+    
 
 if __name__ == '__main__':
-    suite = Tests((cptest, cpdirtest, archive))
+    suite = Tests((cptest, cpdirtest, archive, utils))
     suite.run()
