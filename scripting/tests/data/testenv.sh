@@ -1,2 +1,2 @@
 #!/bin/bash
-export TESTVAR="TESTVALUE"
+export TESTVAR=TESTVALUE
