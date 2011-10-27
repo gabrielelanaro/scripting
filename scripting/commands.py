@@ -7,6 +7,7 @@ import shlex,subprocess,itertools,tarfile
 from functools import wraps
 import collections
 import zipfile
+from glob import glob # We can import that from other modules
 
 def take_str_or_list(f):
     '''
@@ -22,7 +23,7 @@ def take_str_or_list(f):
         first = args[0]
         if isinstance(first, str):
             return f(*args,**kw)
-        elif isinstance(first, collections.Iterable):
+        elif hasattr(first, "__iter__"):
             return [f(arg, *args[1:], **kw) for arg in first]
         else:
             raise Exception("First argument should be a string or a list")

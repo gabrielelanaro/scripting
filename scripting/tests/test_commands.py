@@ -1,33 +1,53 @@
+from __future__ import generators
 import os
 import unittest
-from attest import Tests, Assert
 
 from scripting.commands import (cp, rm, touch, mkdir,
                                 basename, archive, find,
                                 unpack)
 from scripting.commands import take_str_or_list
 
-cptest = Tests()
-cpdirtest = Tests()
 
-@cptest.context
 def make_test_file():
     """Make and return the test file, finally it removes it.
 
     """
-    try:
-        touch("stuff.txt")
-        yield "stuff.txt"
-    finally:
-        rm_silent("stuff.txt")
+    
+    touch("stuff.txt")
+    return "stuff.txt"
+    
+def rm_test_file():
+    rm_silent("stuff.txt")
 
-@cpdirtest.context
-def make_test_dir():
-    try:
-        make_dir_structure()
-        yield
-    finally:
-        rm_silent('testdir')
+    
+class CpTest(unittest.TestCase):
+    def setUp(self):
+        self.src = make_test_file()
+    def tearDown(self):
+        rm_test_file()
+
+
+    def test_cp_f_f(self):
+        """Copy a file to another file.
+
+        """
+        src = self.src
+        try:
+            cp(src, "/tmp/test.txt")
+            assert (os.path.exists("/tmp/test.txt"))
+        finally:
+            rm_silent("/tmp/test.txt")
+
+    def test_cp_f_d(self):
+        """Copy a file to a directory.
+
+        """
+        src = self.src
+        try:
+            cp(src, "/tmp")
+            assert (os.path.exists(os.path.join("/tmp", basename(src))))
+        finally:
+            rm_silent("/tmp/test.txt")
 
 def rm_silent(src):
     """Remove if the file exists.
@@ -35,46 +55,26 @@ def rm_silent(src):
     """
     if os.path.exists(src):
             rm(src)
+        
+class CpDirTest(unittest.TestCase):
+    def setUp(self):
+        make_dir_structure()
+    def tearDown(self):
+        rm_silent("testdir")
+        
+    def test_cp_d_d(self):
+        try:
+            cp('testdir', '/tmp')
+            assert_dir_structure()
+        finally:
+            rm_silent('/tmp/testdir')
 
-
-@cptest.test
-def cp_f_f(src):
-    """Copy a file to another file.
-
-    """
-    try:
-        cp(src, "/tmp/test.txt")
-        Assert(os.path.exists("/tmp/test.txt"))
-    finally:
-        rm_silent("/tmp/test.txt")
-
-
-@cptest.test
-def cp_f_d(src):
-    """Copy a file to a directory.
-
-    """
-    try:
-        cp(src, "/tmp")
-        Assert(os.path.exists(os.path.join("/tmp", basename(src))))
-    finally:
-        rm_silent("/tmp/test.txt")
-
-@cpdirtest.test
-def cp_d_d():
-    try:
-        cp('testdir', '/tmp')
-        assert_dir_structure()
-    finally:
-        rm_silent('/tmp/testdir')
-
-@cpdirtest.test
-def cp_d_d_nonexistent():
-    try:
-        cp("testdir","/tmp/testdir")
-        assert_dir_structure()
-    finally:
-        rm_silent('/tmp/testdir')
+    def test_cp_d_d_nonexistent(self):
+        try:
+            cp("testdir","/tmp/testdir")
+            assert_dir_structure()
+        finally:
+            rm_silent('/tmp/testdir')
 
 def make_dir_structure():
     mkdir("testdir")
@@ -101,24 +101,21 @@ def assert_dir_structure():
     assertfile("/tmp/testdir/testdir2/stuff2.txt", "f")
 
 DATADIR = 'scripting/tests/data'
-archive = Tests()
 
-@archive.context
-def arch_context():
-    try:
-        yield
-    finally:
+
+class TestArchive(unittest.TestCase):
+    def setUp(self):
+        pass
+    def tearDown(self):
         rm_silent("/tmp/testarc")
 
-@archive.test
-def test_unpack_tgz():
-    unpack(os.path.join(DATADIR, 'testarc.tar.gz'), '/tmp')
-    assertfile("/tmp/testarc/file1.txt", "f") # Maybe the other are present, anyway
+    def test_unpack_tgz(self):
+        unpack(os.path.join(DATADIR, 'testarc.tar.gz'), '/tmp')
+        assertfile("/tmp/testarc/file1.txt", "f") # Maybe the other are present, anyway
 
-@archive.test
-def test_unpack_zip():
-    unpack(os.path.join(DATADIR, 'testarc.zip'), "/tmp")
-    assertfile("/tmp/testarc/file1.txt", "f") # Maybe the other are present, anyway
+    def test_unpack_zip(self):
+        unpack(os.path.join(DATADIR, 'testarc.zip'), "/tmp")
+        assertfile("/tmp/testarc/file1.txt", "f") # Maybe the other are present, anyway
 
 
 class TestRm(unittest.TestCase):
@@ -140,7 +137,7 @@ class TestRm(unittest.TestCase):
         if os.path.exists("testdir"):
             rm("testdir")
         
-    def test_dir_nested(self, ):
+    def test_dir_nested(self):
         """
         """
         make_dir_structure()
@@ -148,7 +145,7 @@ class TestRm(unittest.TestCase):
         self.assertFalse(os.path.exists("testdir"))
 
 class TestBasename(unittest.TestCase):
-    def test_dir(self, ):
+    def test_dir(self):
         """
         """
         name = "/hello/world/"
@@ -173,25 +170,21 @@ class TestFind(unittest.TestCase):
     def setUp(self, ):
         make_dir_structure()
 
-    def test_find(self, ):
-        files = list(find("*.txt"))
+    def test_find(self):
+        files = list(find("*.txt", "./testdir"))
         self.assertEqual(files,['./testdir/stuff.txt', './testdir/testdir2/stuff2.txt'])
 
     def tearDown(self):
         rm("testdir")
 
-
-utils = Tests()
-
-@utils.test
-def take_list_text():
-    @take_str_or_list
-    def function(arg):
-        return 1
-    Assert(function("Hello")) == 1
-    Assert(function([1,2,3])) == [1,1,1]
+class TestUtils(unittest.TestCase):
+    def test_take_list_text(self):
+        @take_str_or_list
+        def function(arg):
+            return 1
+        assert function("Hello") == 1
+        assert function([1,2,3]) == [1,1,1]
     
 
 if __name__ == '__main__':
-    suite = Tests((cptest, cpdirtest, archive, utils))
-    suite.run()
+    unittest.main()
