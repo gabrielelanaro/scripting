@@ -1,0 +1,14 @@
+========
+Overview
+========
+
+Scripting is a fantastic python module to produce python shell scripts
+fast and clean, with support for command line arguments and useful
+unix-like commands.
+
+=========
+Reference
+=========
+
+.. automodule:: scripting
+    :members:
