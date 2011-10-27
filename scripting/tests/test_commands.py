@@ -189,5 +189,6 @@ class TestSh(unittest.TestCase):
     def test_sh(self):
         ex, out, err = sh("ls -l")
         assert out
+
 if __name__ == '__main__':
     unittest.main()
