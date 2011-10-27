@@ -104,8 +104,9 @@ def touch(src,times=None):
     Create *src* file if it doesn't exists or update his modification
     time according to *times*.
     '''
-    with open(src, 'a'):
-        os.utime(src,times)
+    f = open(src, 'a')
+    os.utime(src,times)
+    f.close()
 
 def sh_args(args):
     p = subprocess.Popen(args)

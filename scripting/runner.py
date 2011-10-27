@@ -11,12 +11,13 @@ def command(f):
     """
     args = inspect.getargspec(f)
     cmdparser = sub.add_parser(f.__name__, help=f.__doc__)
-    for name in args.args:
+    
+    for name in args[0]:
         cmdparser.add_argument(name)
     
     # unpacking args from the namespace
     def wrapped(ns):
-        f(*(getattr(ns, name) for name in args.args))
+        f(*(getattr(ns, name) for name in args[0]))
     
     cmdparser.set_defaults(func=wrapped)
     

@@ -1,28 +1,27 @@
-from attest import Tests, capture_output
 from scripting.runner import command, parser
 
-tests = Tests()
+foocalled = False
+fooargcalled = False
 
 @command
 def foo():
     """No args at all!"""
-    print 'foo called'
+    global foocalled
+    foocalled = True
 
 @command
 def fooarg(pos1):
-    print pos1
+    global fooargcalled
+    fooargcalled = True
 
-@tests.test
 def test_dec():
-    with capture_output() as (out, err):
-        args = parser.parse_args(['foo'])
-        args.func(args)
-    assert out == ['foo called']
+    args = parser.parse_args(['foo'])
+    args.func(args)
+    assert foocalled
     
-    with capture_output() as (out, err):
-        args = parser.parse_args(['fooarg', 'pos1'])
-        args.func(args)
-    assert out == ['pos1']
+    args = parser.parse_args(['fooarg', 'pos1'])
+    args.func(args)
+    assert fooargcalled
 
 if __name__ == '__main__':
-    tests.run()
+    test_dec()
