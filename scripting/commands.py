@@ -2,6 +2,7 @@
 Shell-like commands for scripting development
 """
 import fnmatch
+import sys
 import os, shutil
 import shlex,subprocess,itertools,tarfile
 from functools import wraps
@@ -110,14 +111,21 @@ def touch(src,times=None):
     f.close()
 
 def sh_args(args):
-    p = subprocess.Popen(args)
-    p.wait()
-    return p.returncode
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    return p.returncode, out, err
 
-def sh_cmdln(cmdl, args):
-    p = subprocess.Popen(itertools.chain(shlex.split(cmdl), args))
-    p.wait()
-    return p.returncode
+def sh(cmdl, args=[]):
+    """Simple function to run shell_commands it takes a shell command
+    line *cmdln*, optionally further arguments *args*.
+
+    Returns a tuple, (exitcode, output, error)
+
+    """
+    splitted_args = list(itertools.chain(shlex.split(cmdl), args))
+    p = subprocess.Popen(splitted_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    return p.returncode, out, err
 
 def archive(src, dst, format="tar"):
     '''
@@ -155,6 +163,11 @@ def unpack(src, dst, format=None):
     auto-select the format based on the extension.
 
     """
+    
+    if sys.version_info < (2, 5):
+        print "to unpack must use python 2.5 or greater"
+        return
+
     if not format:
         base, ext = os.path.splitext(src)
     else:
@@ -172,3 +185,4 @@ def unpack(src, dst, format=None):
 
     arch.extractall(dst)
     arch.close()
+
