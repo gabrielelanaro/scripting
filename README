@@ -1,2 +1,4 @@
-TODO: rm silent, remove a file if it exists
-TODO: file tests, like how to know if two files are equals or a file exist etc...
+Scripting is a fantastic python module to produce python shell scripts
+fast and clean, with support for command line arguments and useful
+unix-like commands.
+
