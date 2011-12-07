@@ -20,14 +20,19 @@ def greplines(pattern, lines):
             res.append(line)
     return res
     
-def sections(text, start, end):
-    """Given the *text* to analyze return the section between the line
-    that matches *start* and the line that matches *end* regexps.
+def sections(start, end, text, line=True):
+    """Given the *text* to analyze return the section the start and
+    end matchers. If line=True return the lines between the line that
+    matches *start* and the line that matches *end* regexps.
 
-    The match is in the regexp lingo *greedy* this means that it
-    matches as much as possible.
+    If line=False return the text between the matching start and end
+    
+    The match is in the regexp lingo *ungreedy*.
 
     """
+    if not line:
+        return re.findall(start+"(.*?)"+end, text, re.DOTALL)
+    
     lines = text.splitlines()
     
     # This is a state-machine with the states MATCHING = True/False
